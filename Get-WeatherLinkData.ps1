@@ -391,7 +391,7 @@ switch ($OutputFormat)
 				'InsideTemperature'
 				{
 					$ChannelElement.InnerText = 'Inside Temperature'
-					$UnitElement.InnerText = 'Degrees'
+					$UnitElement.InnerText = if ($metric) { "&#8451;" } else { "&#8457;" };
 					$FloatElement.InnerText = "1";
 					$ChartElement.InnerText = '1';
 					$TableElement.InnerText = '1';
@@ -407,7 +407,7 @@ switch ($OutputFormat)
 				'OutsideTemperature'
 				{
 					$channelelement.innertext = 'Outside Temperature';
-					$UnitElement.InnerText = "Degrees";
+					$UnitElement.InnerText = if ($metric) { "&#8451;" } else { "&#8457;" };
 					$FloatElement.InnerText = "1";
 					$ChartElement.InnerText = '1';
 					$TableElement.InnerText = '1';
