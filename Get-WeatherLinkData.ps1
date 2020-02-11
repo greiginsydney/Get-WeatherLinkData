@@ -1,4 +1,4 @@
-<# 
+<#
 .SYNOPSIS
 	This script queries your Davis WeatherLink weather station and outputs the primary values in a range of formats.
 
@@ -13,11 +13,11 @@
 	Date				: TBA 2020
 	Author				: Greig Sheridan
 	See the credits at the bottom of the script
-	
+
 	WISH-LIST / TODO:
-	
+
 	KNOWN ISSUES:
-	
+
 	Revision History 	:
 				v0.0 TBA 2020
 					Initial release
@@ -52,9 +52,9 @@
 	Description
 	-----------
 	Queries the Weatherlink device at 10.10.10.10 and displays the output on screen in csv format. The same output is written to the file at WeatherlinkData.csv.
-	
+
 .EXAMPLE
-	.\Get-WeatherLinkData.ps1 -IpAddress '10.10.10.10' -Metric 
+	.\Get-WeatherLinkData.ps1 -IpAddress '10.10.10.10' -Metric
 
 	Description
 	-----------
@@ -103,39 +103,39 @@ $Global:Debug = $psboundparameters.debug.ispresent
 #--------------------------------
 
 [uint16[]]$crc_table = @(
-   0x0, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,`
-0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,`
-0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,`
-0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,`
-0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,`
-0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,`
-0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,`
-0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,`
-0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,`
-0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,`
-0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,`
-0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,`
-0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,`
-0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,`
-0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,`
-0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,`
-0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,`
-0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,`
-0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,`
-0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,`
-0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,`
-0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,`
-0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,`
-0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,`
-0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,`
-0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,`
-0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,`
-0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,`
-0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,`
-0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,`
-0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,`
-0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
-);
+	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
+	0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
+	0x1231, 0x0210, 0x3273, 0x2252, 0x52B5, 0x4294, 0x72F7, 0x62D6,
+	0x9339, 0x8318, 0xB37B, 0xA35A, 0xD3BD, 0xC39C, 0xF3FF, 0xE3DE,
+	0x2462, 0x3443, 0x0420, 0x1401, 0x64E6, 0x74C7, 0x44A4, 0x5485,
+	0xA56A, 0xB54B, 0x8528, 0x9509, 0xE5EE, 0xF5CF, 0xC5AC, 0xD58D,
+	0x3653, 0x2672, 0x1611, 0x0630, 0x76D7, 0x66F6, 0x5695, 0x46B4,
+	0xB75B, 0xA77A, 0x9719, 0x8738, 0xF7DF, 0xE7FE, 0xD79D, 0xC7BC,
+	0x48C4, 0x58E5, 0x6886, 0x78A7, 0x0840, 0x1861, 0x2802, 0x3823,
+	0xC9CC, 0xD9ED, 0xE98E, 0xF9AF, 0x8948, 0x9969, 0xA90A, 0xB92B,
+	0x5AF5, 0x4AD4, 0x7AB7, 0x6A96, 0x1A71, 0x0A50, 0x3A33, 0x2A12,
+	0xDBFD, 0xCBDC, 0xFBBF, 0xEB9E, 0x9B79, 0x8B58, 0xBB3B, 0xAB1A,
+	0x6CA6, 0x7C87, 0x4CE4, 0x5CC5, 0x2C22, 0x3C03, 0x0C60, 0x1C41,
+	0xEDAE, 0xFD8F, 0xCDEC, 0xDDCD, 0xAD2A, 0xBD0B, 0x8D68, 0x9D49,
+	0x7E97, 0x6EB6, 0x5ED5, 0x4EF4, 0x3E13, 0x2E32, 0x1E51, 0x0E70,
+	0xFF9F, 0xEFBE, 0xDFDD, 0xCFFC, 0xBF1B, 0xAF3A, 0x9F59, 0x8F78,
+	0x9188, 0x81A9, 0xB1CA, 0xA1EB, 0xD10C, 0xC12D, 0xF14E, 0xE16F,
+	0x1080, 0x00A1, 0x30C2, 0x20E3, 0x5004, 0x4025, 0x7046, 0x6067,
+	0x83B9, 0x9398, 0xA3FB, 0xB3DA, 0xC33D, 0xD31C, 0xE37F, 0xF35E,
+	0x02B1, 0x1290, 0x22F3, 0x32D2, 0x4235, 0x5214, 0x6277, 0x7256,
+	0xB5EA, 0xA5CB, 0x95A8, 0x8589, 0xF56E, 0xE54F, 0xD52C, 0xC50D,
+	0x34E2, 0x24C3, 0x14A0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
+	0xA7DB, 0xB7FA, 0x8799, 0x97B8, 0xE75F, 0xF77E, 0xC71D, 0xD73C,
+	0x26D3, 0x36F2, 0x0691, 0x16B0, 0x6657, 0x7676, 0x4615, 0x5634,
+	0xD94C, 0xC96D, 0xF90E, 0xE92F, 0x99C8, 0x89E9, 0xB98A, 0xA9AB,
+	0x5844, 0x4865, 0x7806, 0x6827, 0x18C0, 0x08E1, 0x3882, 0x28A3,
+	0xCB7D, 0xDB5C, 0xEB3F, 0xFB1E, 0x8BF9, 0x9BD8, 0xABBB, 0xBB9A,
+	0x4A75, 0x5A54, 0x6A37, 0x7A16, 0x0AF1, 0x1AD0, 0x2AB3, 0x3A92,
+	0xFD2E, 0xED0F, 0xDD6C, 0xCD4D, 0xBDAA, 0xAD8B, 0x9DE8, 0x8DC9,
+	0x7C26, 0x6C07, 0x5C64, 0x4C45, 0x3CA2, 0x2C83, 0x1CE0, 0x0CC1,
+	0xEF1F, 0xFF3E, 0xCF5D, 0xDF7C, 0xAF9B, 0xBFBA, 0x8FD9, 0x9FF8,
+	0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0
+)
 
 #--------------------------------
 # END CONSTANTS -----------------
@@ -166,8 +166,7 @@ Function Get-Telnet
 	{
 		$Stream = $Socket.GetStream()
 		$Writer = New-Object System.IO.StreamWriter($Stream)
-		$Buffer = New-Object System.Byte[] 100
-		$Encoding = New-Object System.Text.UnicodeEncoding
+		$Result = New-Object System.Byte[] 100
 
 		#Now start issuing the commands
 		ForEach ($Command in $Commands)
@@ -176,16 +175,16 @@ Function Get-Telnet
 			$Writer.Flush()
 			Start-Sleep -Milliseconds $WaitTime
 		}
+
 		#All commands issued, but since the last command is usually going to be
 		#the longest let's wait a little longer for it to finish
 		Start-Sleep -Milliseconds ($WaitTime)
-		$Result = @()
 		#Save all the results
 		While($Stream.DataAvailable)
 		{
-			$Read = $Stream.Read($Buffer, 0, 100)
-			$Result += ($Encoding.GetString($Buffer, 0, $Read))
+			$Read = $Stream.Read($Result, 0, 100)
 		}
+		$Writer.Close()
 		$Socket.Close()
 	}
 	Else
@@ -204,7 +203,7 @@ function Convert-F2C
 		[int]$Temp
 	)
 
-	return [int16](($Temp-32)*(5/9))
+	return ([math]::round(($Temp-32)*(5/9),1))
 
 }
 
@@ -241,13 +240,7 @@ $Attempt = 0
 	$attempt ++
 	write-verbose "Attempt #$($attempt)"
 	$enc = [system.Text.Encoding]::Unicode
-	$result = (Get-Telnet -RemoteHost $IpAddress -port $Port -Commands "LOOP 1")
-	[System.Collections.ArrayList]$data = $null
-	try
-	{
-		$data = $enc.GetBytes($result)
-	}
-	catch {}
+	[System.Collections.ArrayList]$data = (Get-Telnet -RemoteHost $IpAddress -port $Port -Commands "LOOP 1")
 
 	switch ($data.count)
 	{
@@ -267,19 +260,20 @@ $Attempt = 0
 			elseif ($data[0] -eq 0x21)
 			{
 				write-warning "Read started with a NAK."
-				continue nextAttempt 
+				continue nextAttempt
 			}
 			else
 			{
-				write-warning "Bad read. Read $($data.count ) bytes from the weather station"
-				continue nextAttempt 
+				write-warning "Bad read. Read 100 bytes from the weather station"
+				$data | out-file -filepath $LogFile
+				continue nextAttempt
 			}
 		}
 
 		default
 		{
 			write-warning "Bad read. Read $($data.count ) bytes from the weather station"
-			continue nextAttempt 
+			continue nextAttempt
 		}
 	}
 
@@ -308,32 +302,32 @@ $Attempt = 0
 if ($Success)
 {
 	#These values are decoded now as they potentially require metric conversion. All others are decoded as the output object is created:
-	$BarometricPressure = [System.BitConverter]::ToInt16($data,7) / 1000
+	$BarometricPressure = [double][System.BitConverter]::ToInt16($data,7) / 1000
 	$InsideTemp =  [System.BitConverter]::ToInt16($data,9) / 10
 	$OutsideTemp = [System.BitConverter]::ToInt16($data,12) / 10
-	$AvgWindSpeed = [int]$data[15]
+	$WindSpeed = [double]$data[14]
 	$RainRate = ([System.BitConverter]::ToInt16($data,41)) * 0.01
 
 	if ($Metric)
 	{
 		$InsideTemp  = Convert-F2C $InsideTemp
 		$OutsideTemp = Convert-F2C $OutsideTemp
-		$BarometricPressure = [math]::round(($BarometricPressure * 33.86389),1)
-		$AvgWindSpeed = [math]::round($AvgWindSpeed * 1.609,1)
+		$BarometricPressure = $BarometricPressure * 33.86389
+		$WindSpeed = [math]::round($WindSpeed * 1.609,0)
 		$RainRate = ([System.BitConverter]::ToInt16($data,41)) * 0.2
 	}
 
 	$info = [ordered]@{
 		"Success" = $True;
 		"Metric" = $Metric;
-		"InsideTemperature" = "{0:f1}" -f $InsideTemp
-		"InsideHumidity" = [int]$data[11]
-		"OutsideTemperature" = "{0:f1}" -f $OutsideTemp
-		"OutsideHumidity" = [int]$data[33]
-		"AvgWindSpeed" = "{0:f1}" -f $AvgWindSpeed
-		"WindDirection" = ([System.BitConverter]::ToInt16($data,16))
-		"BarometricPressure" = "{0:f1}" -f $BarometricPressure
-		"RainRate" = ([System.BitConverter]::ToInt16($data,41))
+		"InsideTemperature" = [math]::round($InsideTemp,1)
+		"InsideHumidity" = [double]$data[11]
+		"OutsideTemperature" = [math]::round($OutsideTemp,1)
+		"OutsideHumidity" = [double]$data[33]
+		"WindSpeed" = $WindSpeed
+		"WindDirection" = [double]([System.BitConverter]::ToInt16($data,16))
+		"BarometricPressure" = [math]::round($BarometricPressure,3)
+		"RainRate" = $RainRate
 	}
 }
 else
@@ -345,7 +339,7 @@ else
 		"InsideHumidity" = $null;
 		"OutsideTemperature" = $null;
 		"OutsideHumidity" = $null;
-		"AvgWindSpeed" = $null;
+		"WindSpeed" = $null;
 		"WindDirection" = $null;
 		"BarometricPressure" = $null;
 		"RainRate" = $null;
@@ -375,95 +369,107 @@ switch ($OutputFormat)
 		$dec = $Doc.CreateXmlDeclaration("1.0","UTF-8",$null)
 		$doc.AppendChild($dec) | Out-Null
 		$root = $doc.CreateNode("element","prtg",$null)
-		$resultInfo.PsObject.Properties | foreach-object `
+		if ($Success)
 		{
-			if (($_.Name -eq 'Success') -or ($_.Name -eq 'Metric')) { return } #Suppress these in the output to PRTG 
-			$child = $doc.CreateNode("element","Result",$null)
-			$ChannelElement = $doc.CreateElement('Channel')
-			$UnitElement = $doc.CreateElement('customUnit')
-			$FloatElement = $doc.CreateElement('float');
-			$ValueElement = $doc.CreateElement('value');
-			$ChartElement = $doc.CreateElement('showChart');
-			$TableElement = $doc.CreateElement('showTable');
-			
-			switch ($_.Name)
+			$resultInfo.PsObject.Properties | foreach-object `
 			{
-				'InsideTemperature'
+				if (($_.Name -eq 'Success') -or ($_.Name -eq 'Metric')) { return } #Suppress these in the output to PRTG
+				$child = $doc.CreateNode("element","Result",$null)
+				$ChannelElement = $doc.CreateElement('Channel')
+				$UnitElement = $doc.CreateElement('customUnit')
+				$FloatElement = $doc.CreateElement('float');
+				$ValueElement = $doc.CreateElement('value');
+				$ChartElement = $doc.CreateElement('showChart');
+				$TableElement = $doc.CreateElement('showTable');
+
+				switch ($_.Name)
 				{
-					$ChannelElement.InnerText = 'Inside Temperature'
-					$UnitElement.InnerText = if ($metric) { "&#8451;" } else { "&#8457;" };
-					$FloatElement.InnerText = "1";
-					$ChartElement.InnerText = '1';
-					$TableElement.InnerText = '1';
+					'InsideTemperature'
+					{
+						$ChannelElement.InnerText = 'Inside Temperature'
+						$UnitElement.InnerText = if ($metric) { "&#8451;" } else { "&#8457;" };
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+					'InsideHumidity'
+					{
+						$channelelement.innertext = 'Inside Humidity';
+						$UnitElement.InnerText = "%";
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+					'OutsideTemperature'
+					{
+						$channelelement.innertext = 'Outside Temperature';
+						$UnitElement.InnerText = if ($metric) { "&#8451;" } else { "&#8457;" };
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+					'OutsideHumidity'
+					{
+						$channelelement.innertext = 'Outside Humidity';
+						$UnitElement.InnerText = "%";
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+					'WindSpeed'
+					{
+						$channelelement.innertext = 'Wind Speed';
+						$UnitElement.InnerText = if ($metric) { "km/h" } else { "mph" };
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+					'WindDirection'
+					{
+						$channelelement.innertext = 'Wind Direction';
+						$UnitElement.InnerText = "Degrees";
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '0';
+						$TableElement.InnerText = '1';
+					}
+					'BarometricPressure'
+					{
+						$channelelement.innertext = 'Barometric Pressure';
+						$UnitElement.InnerText = if ($metric) { "hPa" } else { "Hg" };
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+					'RainRate'
+					{
+						$channelelement.innertext = 'Rain Rate';
+						$UnitElement.InnerText = if ($metric) { "mm/h" } else { "inches/h" };
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+					default { continue }
 				}
-				'InsideHumidity'
-				{
-					$channelelement.innertext = 'Inside Humidity';
-					$UnitElement.InnerText = "%";
-					$FloatElement.InnerText = "1";
-					$ChartElement.InnerText = '1';
-					$TableElement.InnerText = '1';
-				}
-				'OutsideTemperature'
-				{
-					$channelelement.innertext = 'Outside Temperature';
-					$UnitElement.InnerText = if ($metric) { "&#8451;" } else { "&#8457;" };
-					$FloatElement.InnerText = "1";
-					$ChartElement.InnerText = '1';
-					$TableElement.InnerText = '1';
-				}
-				'OutsideHumidity'
-				{
-					$channelelement.innertext = 'Outside Humidity';
-					$UnitElement.InnerText = "%";
-					$FloatElement.InnerText = "1";
-					$ChartElement.InnerText = '1';
-					$TableElement.InnerText = '1';
-				}
-				'AvgWindSpeed'
-				{
-					$channelelement.innertext = 'Average Wind Speed';
-					$UnitElement.InnerText = if ($metric) { "km/h" } else { "mph" };
-					$FloatElement.InnerText = "1";
-					$ChartElement.InnerText = '1';
-					$TableElement.InnerText = '1';
-				}
-				'WindDirection'
-				{
-					$channelelement.innertext = 'Wind Direction';
-					$UnitElement.InnerText = "Degrees";
-					$FloatElement.InnerText = "1";
-					$ChartElement.InnerText = '1';
-					$TableElement.InnerText = '1';
-				}
-				'BarometricPressure'
-				{
-					$channelelement.innertext = 'Barometric Pressure';
-					$UnitElement.InnerText = if ($metric) { "hPa" } else { "Hg" };
-					$FloatElement.InnerText = "1";
-					$ChartElement.InnerText = '1';
-					$TableElement.InnerText = '1';
-				}
-				'RainRate'
-				{
-					$channelelement.innertext = 'Rain Rate';
-					$UnitElement.InnerText = if ($metric) { "mm/h" } else { "inches/h" };
-					$FloatElement.InnerText = "1";
-					$ChartElement.InnerText = '1';
-					$TableElement.InnerText = '1';
-				}
-				default { continue }
+				$child.AppendChild($ChannelElement)	| Out-Null;
+				$child.AppendChild($UnitElement)	| out-null;
+				$child.AppendChild($FloatElement)	| out-null;
+				$ValueElement.InnerText = $_.Value
+				$child.AppendChild($ValueElement)	| out-null;
+				$child.AppendChild($ChartElement)	| out-null;
+				$child.AppendChild($TableElement)	| out-null;
+
 			}
-			$child.AppendChild($ChannelElement)	| Out-Null;
-			$child.AppendChild($UnitElement)	| out-null;
-			$child.AppendChild($FloatElement)	| out-null;
-			$ValueElement.InnerText = $_.Value
-			$child.AppendChild($ValueElement)	| out-null;
-			$child.AppendChild($ChartElement)	| out-null;
-			$child.AppendChild($TableElement)	| out-null;
-			#append to root
-			$root.AppendChild($child) | Out-Null
 		}
+		else
+		{
+			$child = $doc.CreateNode("element","error",$null)
+			$child.InnerText = '1';
+			$root.AppendChild($child) | Out-Null
+			$child = $doc.CreateNode("element","text",$null)
+			$child.InnerText = 'error';
+		}
+		#append to root
+		$root.AppendChild($child) | Out-Null
 		$doc.AppendChild($root) | Out-Null
 		$doc.InnerXML
 		if ($FileName) { $doc.Save($Filename)}
@@ -476,4 +482,5 @@ switch ($OutputFormat)
 # Thank you Martin Pugh for Get-Telnet: https://thesurlyadmin.com/2013/04/04/using-powershell-as-a-telnet-client/
 # See also https://community.spiceworks.com/scripts/show/1887-get-telnet-telnet-to-a-device-and-issue-commands
 # Hand-crafting XML, thanks to Jeff Hicks: https://www.petri.com/creating-custom-xml-net-powershell
-
+# Cross-checked CRC table from here: https://stackoverflow.com/questions/17196743/crc-ccitt-implementation
+# NetworkStream.Read Method: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.networkstream.read?view=netframework-4.8
