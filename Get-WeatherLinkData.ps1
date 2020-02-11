@@ -37,14 +37,14 @@
 
 	Description
 	-----------
-	Queries the Weatherlink device at 10.10.10.10 and displays the output to screen and pipeline as an Object.
+	Queries the Weatherlink device at 10.10.10.10 and displays the output to screen and pipeline in PRTG XML format.
 
 .EXAMPLE
-	.\Get-WeatherLinkData.ps1 -IpAddress '10.10.10.10' -OutputFormat PRTG
+	.\Get-WeatherLinkData.ps1 -IpAddress '10.10.10.10' -OutputFormat Object
 
 	Description
 	-----------
-	Queries the Weatherlink device at 10.10.10.10 and displays the output on screen in XML format for PRTG.
+	Queries the Weatherlink device at 10.10.10.10 and displays the output on screen and pipline as an Object.
 
 .EXAMPLE
 	.\Get-WeatherLinkData.ps1 -IpAddress '10.10.10.10' -OutputFormat csv -FileName WeatherlinkData.csv
