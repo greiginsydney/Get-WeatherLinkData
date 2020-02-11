@@ -457,7 +457,8 @@ switch ($OutputFormat)
 				$child.AppendChild($ValueElement)	| out-null;
 				$child.AppendChild($ChartElement)	| out-null;
 				$child.AppendChild($TableElement)	| out-null;
-
+				#append to root
+				$root.AppendChild($child) | Out-Null
 			}
 		}
 		else
@@ -467,9 +468,9 @@ switch ($OutputFormat)
 			$root.AppendChild($child) | Out-Null
 			$child = $doc.CreateNode("element","text",$null)
 			$child.InnerText = 'error';
+			#append to root
+			$root.AppendChild($child) | Out-Null
 		}
-		#append to root
-		$root.AppendChild($child) | Out-Null
 		$doc.AppendChild($root) | Out-Null
 		$doc.InnerXML
 		if ($FileName) { $doc.Save($Filename)}
