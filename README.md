@@ -18,5 +18,7 @@ Add the "-metric" switch and the values will be converted to km/h and &#8451;.
 
 You'll find more information on my blog, including detailed "how-to" steps to get your weather station data into PRTG:
 https://greiginsydney.com/Get-WeatherLinkData.ps1
+
 </br>
+
 \- Greig.
