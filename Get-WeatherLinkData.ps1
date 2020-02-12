@@ -5,7 +5,7 @@
 .DESCRIPTION
 	This script queries your Davis WeatherLink weather station and outputs the primary values in a range of formats.
 	It reports in Imperial by default, but will output metric with the "-metric" switch.
-	The default output is a PowerShell object to the screen, with other options being CSV & the XML format for PRTG.
+	The default output is XML (formatted for PRTG), with other options being CSV & PowerShell object.
 	Add a Filename and the same output will be saved to the named file.
 
 .NOTES
@@ -265,7 +265,7 @@ $Attempt = 0
 			else
 			{
 				write-warning "Bad read. Read 100 bytes from the weather station"
-				$data | out-file -filepath $LogFile
+				if ($Debug) { $data | out-file -filepath $LogFile -Encoding "UTF8" }
 				continue nextAttempt
 			}
 		}
@@ -288,13 +288,13 @@ $Attempt = 0
 		#We're good!
 		$Success = $true
 		write-verbose "CRC OK on attempt #$($attempt)"
-		$data | out-file -filepath "CRC-good.log" -encoding "UTF8"
+		if ($Debug) { $data | out-file -filepath "CRC-good.log" -encoding "UTF8" }
 		break
 	}
 	else
 	{
 		write-warning "CRC Fail on attempt #$($attempt)"
-		$data | out-file -filepath $LogFile -encoding "UTF8"
+		if ($Debug) { $data | out-file -filepath $LogFile -encoding "UTF8" }
 	}
 }
 
