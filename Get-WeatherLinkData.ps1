@@ -9,8 +9,8 @@
 	Add a Filename and the same output will be saved to the named file.
 
 .NOTES
-	Version				: 0.0
-	Date				: TBA 2020
+	Version				: 1.0
+	Date				: 12th February 2020
 	Author				: Greig Sheridan
 	See the credits at the bottom of the script
 
@@ -19,7 +19,7 @@
 	KNOWN ISSUES:
 
 	Revision History 	:
-				v0.0 TBA 2020
+				v1.0 12th February 2020
 					Initial release
 
 .LINK
@@ -30,7 +30,7 @@
 
 	Description
 	-----------
-	Without an IP address, the script will err.
+	If you don't provide an IP address, the script will prompt for one.
 
 .EXAMPLE
 	.\Get-WeatherLinkData.ps1 -IpAddress '10.10.10.10'
@@ -238,7 +238,7 @@ $Attempt = 0
 :nextAttempt while ($retries - $attempt -ge 0)
 {
 	$attempt ++
-	write-verbose "Attempt #$($attempt)"
+	#write-verbose "Attempt #$($attempt)"
 	$enc = [system.Text.Encoding]::Unicode
 	[System.Collections.ArrayList]$data = (Get-Telnet -RemoteHost $IpAddress -port $Port -Commands "LOOP 1")
 
@@ -246,7 +246,7 @@ $Attempt = 0
 	{
 		99
 		{
-			write-verbose "Good read. Read 99 bytes"
+			write-verbose "Attempt #$($attempt). Good read. Read 99 bytes."
 		}
 
 		100
@@ -254,17 +254,17 @@ $Attempt = 0
 			if ($data[0] -eq 0x06)
 			{
 				# 'ACK' - we're good
-				write-verbose "Read started with an ACK."
+				write-verbose "Attempt #$($attempt). Read started with an ACK."
 				$data.RemoveAt(0)
 			}
 			elseif ($data[0] -eq 0x21)
 			{
-				write-warning "Read started with a NAK."
+				write-warning "Attempt #$($attempt). Read started with a NAK."
 				continue nextAttempt
 			}
 			else
 			{
-				write-warning "Bad read. Read 100 bytes from the weather station"
+				write-warning "Attempt #$($attempt). Bad read. Read 100 bytes from the weather station."
 				if ($Debug) { $data | out-file -filepath $LogFile -Encoding "UTF8" }
 				continue nextAttempt
 			}
@@ -272,7 +272,7 @@ $Attempt = 0
 
 		default
 		{
-			write-warning "Bad read. Read $($data.count ) bytes from the weather station"
+			write-warning "Attempt #$($attempt). Bad read. Read $($data.count ) bytes from the weather station."
 			continue nextAttempt
 		}
 	}
@@ -287,13 +287,13 @@ $Attempt = 0
 	{
 		#We're good!
 		$Success = $true
-		write-verbose "CRC OK on attempt #$($attempt)"
+		write-verbose "Attempt #$($attempt). CRC OK."
 		if ($Debug) { $data | out-file -filepath "CRC-good.log" -encoding "UTF8" }
 		break
 	}
 	else
 	{
-		write-warning "CRC Fail on attempt #$($attempt)"
+		write-warning "Attempt #$($attempt). CRC Fail."
 		if ($Debug) { $data | out-file -filepath $LogFile -encoding "UTF8" }
 	}
 }
