@@ -240,7 +240,7 @@ $Attempt = 0
 	$attempt ++
 	#write-verbose "Attempt #$($attempt)"
 	$enc = [system.Text.Encoding]::Unicode
-	[System.Collections.ArrayList]$data = (Get-Telnet -RemoteHost $IpAddress -port $Port -Commands "LOOP 1")
+	[System.Collections.ArrayList]$data = (Get-Telnet -RemoteHost $IpAddress -port $Port -Commands "LPS 2 1")
 
 	switch ($data.count)
 	{
@@ -307,6 +307,8 @@ if ($Success)
 	$OutsideTemp = [System.BitConverter]::ToInt16($data,12) / 10
 	$WindSpeed = [double]$data[14]
 	$RainRate = ([System.BitConverter]::ToInt16($data,41)) * 0.01
+    	$LastHourRain = ([System.BitConverter]::ToInt16($data,54)) * 0.01
+    	$DayRain = ([System.BitConverter]::ToInt16($data,50)) * 0.01
 
 	if ($Metric)
 	{
@@ -315,6 +317,8 @@ if ($Success)
 		$BarometricPressure = $BarometricPressure * 33.86389
 		$WindSpeed = [math]::round($WindSpeed * 1.609,0)
 		$RainRate = ([System.BitConverter]::ToInt16($data,41)) * 0.2
+        	$LastHourRain = ([System.BitConverter]::ToInt16($data,54)) * 0.2
+        	$DayRain = ([System.BitConverter]::ToInt16($data,50)) * 0.2
 	}
 
 	$info = [ordered]@{
@@ -328,6 +332,8 @@ if ($Success)
 		"WindDirection" = [double]([System.BitConverter]::ToInt16($data,16))
 		"BarometricPressure" = [math]::round($BarometricPressure,3)
 		"RainRate" = $RainRate
+        	"LastHourRain" = $LastHourRain
+        	"DayRain" = $DayRain
 	}
 }
 else
@@ -343,6 +349,8 @@ else
 		"WindDirection" = $null;
 		"BarometricPressure" = $null;
 		"RainRate" = $null;
+        	"LastHourRain" = $null;
+        	"DayRain" = $null
 	}
 }
 
@@ -416,6 +424,14 @@ switch ($OutputFormat)
 						$ChartElement.InnerText = '1';
 						$TableElement.InnerText = '1';
 					}
+					'BarometricPressure'
+					{
+						$channelelement.innertext = 'Barometric Pressure';
+						$UnitElement.InnerText = if ($metric) { "hPa" } else { "Hg" };
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
 					'WindSpeed'
 					{
 						$channelelement.innertext = 'Wind Speed';
@@ -432,20 +448,28 @@ switch ($OutputFormat)
 						$ChartElement.InnerText = '0';
 						$TableElement.InnerText = '1';
 					}
-					'BarometricPressure'
-					{
-						$channelelement.innertext = 'Barometric Pressure';
-						$UnitElement.InnerText = if ($metric) { "hPa" } else { "Hg" };
-						$FloatElement.InnerText = "1";
-						$ChartElement.InnerText = '1';
-						$TableElement.InnerText = '1';
-					}
 					'RainRate'
 					{
 						$channelelement.innertext = 'Rain Rate';
 						$UnitElement.InnerText = if ($metric) { "mm/h" } else { "inches/h" };
 						$FloatElement.InnerText = "1";
 						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+                    			'LastHourRain'
+					{
+						$channelelement.innertext = 'Last Hour Rain';
+						$UnitElement.InnerText = if ($metric) { "mm" } else { "inches" };
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+                    			'DayRain'
+					{
+						$channelelement.innertext = 'Day Rain';
+						$UnitElement.InnerText = if ($metric) { "mm" } else { "inches" };
+						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '0';
 						$TableElement.InnerText = '1';
 					}
 					default { continue }
