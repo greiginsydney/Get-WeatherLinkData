@@ -207,6 +207,16 @@ function Convert-F2C
 
 }
 
+function Convert-M2K
+{
+	Param (
+		[Parameter(ValueFromPipeline=$true)]
+		[int]$Wind
+	)
+
+	return ([math]::round($Wind * 1.60934))
+
+}
 
 #--------------------------------
 # END FUNCTIONS -----------------
@@ -306,6 +316,7 @@ if ($Success)
 	$InsideTemp =  [System.BitConverter]::ToInt16($data,9) / 10
 	$OutsideTemp = [System.BitConverter]::ToInt16($data,12) / 10
 	$WindSpeed = [double]$data[14]
+    	$WindGust = [double]$data[22]
 	$RainRate = ([System.BitConverter]::ToInt16($data,41)) * 0.01
     	$LastHourRain = ([System.BitConverter]::ToInt16($data,54)) * 0.01
     	$DayRain = ([System.BitConverter]::ToInt16($data,50)) * 0.01
@@ -315,7 +326,8 @@ if ($Success)
 		$InsideTemp  = Convert-F2C $InsideTemp
 		$OutsideTemp = Convert-F2C $OutsideTemp
 		$BarometricPressure = $BarometricPressure * 33.86389
-		$WindSpeed = [math]::round($WindSpeed * 1.609,0)
+		$WindSpeed = Convert-M2K $WindSpeed
+        	$WindGust = Convert-M2K $WindGust
 		$RainRate = ([System.BitConverter]::ToInt16($data,41)) * 0.2
         	$LastHourRain = ([System.BitConverter]::ToInt16($data,54)) * 0.2
         	$DayRain = ([System.BitConverter]::ToInt16($data,50)) * 0.2
@@ -329,6 +341,7 @@ if ($Success)
 		"OutsideTemperature" = [math]::round($OutsideTemp,1)
 		"OutsideHumidity" = [double]$data[33]
 		"WindSpeed" = $WindSpeed
+        	"WindGust" = $WindGust
 		"WindDirection" = [double]([System.BitConverter]::ToInt16($data,16))
 		"BarometricPressure" = [math]::round($BarometricPressure,3)
 		"RainRate" = $RainRate
@@ -346,6 +359,7 @@ else
 		"OutsideTemperature" = $null;
 		"OutsideHumidity" = $null;
 		"WindSpeed" = $null;
+        	"WindGust" = $null;
 		"WindDirection" = $null;
 		"BarometricPressure" = $null;
 		"RainRate" = $null;
@@ -437,6 +451,14 @@ switch ($OutputFormat)
 						$channelelement.innertext = 'Wind Speed';
 						$UnitElement.InnerText = if ($metric) { "km/h" } else { "mph" };
 						$FloatElement.InnerText = "1";
+						$ChartElement.InnerText = '1';
+						$TableElement.InnerText = '1';
+					}
+					'WindGust'
+					{
+						$channelelement.innertext = 'Wind Gust';
+						$UnitElement.InnerText = if ($metric) { "km/h" } else { "mph" };
+						$FloatElement.InnerText = "0";
 						$ChartElement.InnerText = '1';
 						$TableElement.InnerText = '1';
 					}
