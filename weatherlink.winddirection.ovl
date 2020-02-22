@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <ValueLookup id="Custom.Weatherlink.WindDirection" desiredValue="0" undefinedState="Ok">
+    <Lookups>
+	  <Range state="Ok" from="0" to="0"></Range>
+	  <Range state="Ok" from="1" to="22">North </Range>
+	  <Range state="Ok" from="23" to="67">North East</Range>	
+	  <Range state="Ok" from="68" to="112">East </Range>	
+	  <Range state="Ok" from="113" to="157">South East </Range>	
+	  <Range state="Ok" from="158" to="202">South </Range>	
+	  <Range state="Ok" from="203" to="247">South West </Range>	
+	  <Range state="Ok" from="248" to="292">West </Range>	
+	  <Range state="Ok" from="293" to="337">North West </Range>	
+	  <Range state="Ok" from="338" to="360">North </Range>	
+    </Lookups>
+  </ValueLookup>
+  
